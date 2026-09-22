@@ -1,0 +1,26 @@
+# Development overrides — layer on top of docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# DO NOT commit secrets. Copy .env.example → .env and fill in values.
+# Seed data and fixed OTP are DEVELOPMENT ONLY — never in production.
+
+version: '3.9'
+
+services:
+  postgres:
+    ports:
+      # Bound to 127.0.0.1 — accessible from localhost only
+      - "127.0.0.1:5432:5432"
+    volumes:
+      # Load seed data in dev only
+      - ./backend/seeds/dev_seed.sql:/docker-entrypoint-initdb.d/99_dev_seed.sql:ro
+
+  backend:
+    ports:
+      # Bound to 127.0.0.1 — accessible from localhost only
+      - "127.0.0.1:8000:8000"
+    environment:
+      DEV_FIXED_OTP_ENABLED: ${DEV_FIXED_OTP_ENABLED:-false}
+      DEV_FIXED_OTP_VALUE: ${DEV_FIXED_OTP_VALUE:-000000}
+    volumes:
+      - ./backend:/app  # Hot-reload in dev
